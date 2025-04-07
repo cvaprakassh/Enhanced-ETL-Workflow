@@ -9,7 +9,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo "Download complete. Extracting files..."
-unzip -q dataset.zip
+unzip -q dataset.zip -d dataset
 if [ $? -ne 0 ]; then
     echo "Error extracting the dataset."
     exit 1
@@ -22,3 +22,16 @@ if [ $? -ne 0 ]; then
 fi
 echo "All done! The dataset is ready for use."
 echo "You can find the extracted files in the current directory."
+
+echo "uploading dataset to the cloud..."
+# Upload the dataset to the cloud
+# (Assuming you have a cloud storage CLI tool installed and configured)
+
+aws s3 cp ./dataset s3://my-etl-project-bucket-project/raw/ --recursive
+
+#Check if the upload was successful
+if [ $? -ne 0 ]; then
+    echo "Error uploading the dataset to the cloud."
+    exit 1
+fi
+echo "Upload complete. The dataset is now available in the cloud."
