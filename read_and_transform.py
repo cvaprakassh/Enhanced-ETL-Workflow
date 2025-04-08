@@ -1,9 +1,15 @@
 import boto3
 import pandas as pd
 import io
+from sqlalchemy import create_engine
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 s3 = boto3.client('s3')
-bucket = 'my-etl-project-bucket-project'
+bucket = os.getenv('S3_BUCKET_NAME')
 prefix = 'raw/'
 
 # List objects in the folder
@@ -56,3 +62,26 @@ try:
     print("Data transformation complete and saved to S3.")
 except Exception as e:
     print(f"Error saving transformed data to S3: {e}")
+
+# Save to MySQL
+
+# Define your connection details
+username = os.getenv('RDS_USERNAME')
+password = os.getenv('RDS_PASSWORD')
+host = os.getenv('RDS_HOSTNAME')
+port = os.getenv('RDS_PORT')
+database = os.getenv('RDS_DB_NAME')
+
+# create a SQLAlchemy engine
+engine = create_engine(f'mysql+pymysql://{username}:{password}@{host}:{port}/{database}')
+
+# Save the DataFrame to MySQL
+try:
+    raw_data.to_sql('transformed_data', con=engine, if_exists='replace', index=False)
+    print("Data saved to MySQL database.")
+except Exception as e:
+    print(f"Error saving data to MySQL: {e}")
+# Close the engine connection
+engine.dispose()
+# Close the S3 client
+s3.close()
