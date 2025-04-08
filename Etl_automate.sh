@@ -12,7 +12,9 @@ echo "📤 Dataset uploaded to the cloud..."
 
 echo "📊 Transforming data..."
 # Transform the data
-python3 read_and_transform.py
+make setup     # Sets up virtualenv and installs packages
+make run       # Runs your ETL script
+make clean     # Deletes the virtualenv
 echo "📈 Data transformation is complete and updated RDS cloud..."
 
 echo "✅ All scripts completed successfully!"

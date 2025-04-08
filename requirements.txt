@@ -1,0 +1,6 @@
+boto3
+pandas
+sqlalchemy
+sqlalchemy-utils
+python-dotenv
+pymysql
