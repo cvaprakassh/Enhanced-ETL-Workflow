@@ -4,3 +4,4 @@ sqlalchemy
 sqlalchemy-utils
 python-dotenv
 pymysql
+lxml

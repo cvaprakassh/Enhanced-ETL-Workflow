@@ -18,4 +18,4 @@ make clean     # Deletes the virtualenv
 echo "📈 Data transformation is complete and updated RDS cloud..."
 
 echo "✅ All scripts completed successfully!"
-exho "🚀 ETL process completed!"
+echo "🚀 ETL process completed!"
