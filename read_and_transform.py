@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 s3 = boto3.client('s3')
-bucket = os.getenv('S3_BUCKET_NAME')
+bucket = os.getenv('S3_BUCKET')
 prefix = 'raw/'
 
 # List objects in the folder
@@ -66,11 +66,11 @@ except Exception as e:
 # Save to MySQL
 
 # Define your connection details
-username = os.getenv('RDS_USERNAME')
-password = os.getenv('RDS_PASSWORD')
-host = os.getenv('RDS_HOSTNAME')
+username = os.getenv('RDS_USER')
+password = os.getenv('RDS_PASS')
+host = os.getenv('RDS_HOST')
 port = os.getenv('RDS_PORT')
-database = os.getenv('RDS_DB_NAME')
+database = os.getenv('RDS_DB')
 
 # create a SQLAlchemy engine
 engine = create_engine(f'mysql+pymysql://{username}:{password}@{host}:{port}/{database}')
