@@ -2,11 +2,15 @@ import boto3
 import pandas as pd
 import io
 from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
 from dotenv import load_dotenv
 import os
 
 # Load environment variables from .env file
 load_dotenv()
+
+#print("Loaded S3 Bucket Name:", os.getenv("S3_BUCKET"))
+
 
 s3 = boto3.client('s3')
 bucket = os.getenv('S3_BUCKET')
@@ -26,7 +30,7 @@ for obj in objects.get('Contents', []):
         dataframes.append(df)
     elif key.endswith('.json'):
         response = s3.get_object(Bucket=bucket, Key=key)
-        df = pd.read_json(io.BytesIO(response['Body'].read()))
+        df = pd.read_json(io.BytesIO(response['Body'].read()), lines=True)
         dataframes.append(df)
     elif key.endswith('.xml'):
         response = s3.get_object(Bucket=bucket, Key=key)
