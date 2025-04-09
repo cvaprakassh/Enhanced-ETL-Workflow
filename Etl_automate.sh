@@ -19,3 +19,23 @@ echo "📈 Data transformation is complete and updated RDS cloud..."
 
 echo "✅ All scripts completed successfully!"
 echo "🚀 ETL process completed!"
+
+echo "🗑️ Cleaning up temporary files..."
+# Clean up the temporary files
+rm -rf dataset
+# Check if the temporary files deletion was successful
+if [ $? -ne 0 ]; then
+    echo "Error deleting the temporary files."
+    exit 1
+fi      
+echo "🗑️ Temporary files deleted successfully. All resources have been cleaned up."
+
+#clean dataset
+aws s3 rm s3://my-etl-project-bucket-project/raw/ --recursive
+# Check if the dataset deletion was successful
+if [ $? -ne 0 ]; then
+    echo "Error deleting the dataset from the cloud."
+    exit 1
+fi
+echo "🗑️ Dataset deleted successfully. All resources have been cleaned up."
+
