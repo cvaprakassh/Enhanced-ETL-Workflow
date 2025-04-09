@@ -5,11 +5,30 @@ from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 from dotenv import load_dotenv
 import os
+import logging
+from _datetime import datetime
+
+
+# Set up logging
+log_file = f"/tmp/etl_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger()
 
 # Load environment variables from .env file
 load_dotenv()
 
 #print("Loaded S3 Bucket Name:", os.getenv("S3_BUCKET"))
+
+logger.info("Starting data extraction from S3...")
 
 
 s3 = boto3.client('s3')
@@ -40,6 +59,12 @@ for obj in objects.get('Contents', []):
 # Combine all into one DataFrame
 raw_data = pd.concat(dataframes, ignore_index=True)
 
+logger.info("Extraction from S3 Completed..")
+
+# Transformations
+
+logger.info("Starting data transformation...")
+
 # Inches to meters (e.g., height column)
 if 'height_in' in raw_data.columns:
     raw_data['height_m'] = raw_data['height_in'] * 0.0254
@@ -57,6 +82,13 @@ raw_data.fillna(method='ffill', inplace=True)
 # Standardize column names
 raw_data.columns = [col.strip().lower().replace(" ", "_") for col in raw_data.columns]
 
+
+logger.info("Data transformation completed.")
+
+logger.info(f"Saving transformed data to S3 ...")
+
+
+
 # Save the transformed data to S3
 output_buffer = io.StringIO()
 raw_data.to_csv(output_buffer, index=False)
@@ -66,6 +98,10 @@ try:
     print("Data transformation complete and saved to S3.")
 except Exception as e:
     print(f"Error saving transformed data to S3: {e}")
+
+
+logger.info("Writing data to RDS usig SQLAlchemy connection...")
+
 
 # Save to MySQL
 
@@ -79,6 +115,11 @@ database = os.getenv('RDS_DB')
 # create a SQLAlchemy engine
 engine = create_engine(f'mysql+pymysql://{username}:{password}@{host}:{port}/{database}')
 
+# Check if the database exists, if not create it
+if not database_exists(engine.url):
+    create_database(engine.url)
+    print(f"Database {database} created.")
+
 # Save the DataFrame to MySQL
 try:
     raw_data.to_sql('transformed_data', con=engine, if_exists='replace', index=False)
@@ -87,5 +128,21 @@ except Exception as e:
     print(f"Error saving data to MySQL: {e}")
 # Close the engine connection
 engine.dispose()
+logger.info("Data saved to MySQL database successfully.")
+logger.info("ETL process completed successfully.")
+logger.info(f"Log file: {log_file}")
+
+try:
+    log_s3_path = "my-etl-project-bucket-project/logs/"
+    s3 = boto3.client("s3")
+    s3.upload_file(log_file, "my-etl-project-bucket-project", f"logs/{os.path.basename(log_file)}")
+    logger.info(f"Log file uploaded to S3: s3://{log_s3_path}{os.path.basename(log_file)}")
+except Exception as e:
+    logger.error(f"Failed to upload log to S3: {e}")
+
+# Close the logger
+logger.handlers[0].close()
+logger.removeHandler(logger.handlers[0])
+
 # Close the S3 client
 s3.close()
